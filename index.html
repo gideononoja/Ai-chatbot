@@ -135,6 +135,7 @@
     <aside class="sidebar" id="sidebar" aria-label="Main">
       <div class="brand"><div class="logo" aria-hidden="true"></div><h1>FreshChoice</h1></div>
       <div class="nav" role="tablist">
+        <button class="active" data-section="home" role="tab">🏠 Home</button>
         <button class="active" data-section="chat" role="tab">💬 Chat</button>
         <button data-section="products" role="tab">🛒 Products</button>
         <button data-section="about" role="tab">ℹ️ About</button>
@@ -253,7 +254,7 @@
           <h2>Contact & Orders</h2>
           <p style="color:#cbd5e1">Open <b>Mon–Sat, 8:00–19:00</b>. Same-day delivery within Benue.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
-            <a class="x" href="tel:+2348000000000">📞 +234 8149427453</a>
+            <a class="x" href="tel:+2348149427453">📞 +234 8149427453</a>
             <a class="x" href="mailto:hello@freshchoice.ng">✉️ hello@freshchoice.ng</a>
             <a class="x" id="waQuick" href="#" target="_blank" rel="noopener">🟢 WhatsApp us</a>
           </div>
@@ -504,9 +505,9 @@
     test: q => /contact|phone|whatsapp|call|email/i.test(q),
     reply: () => {
       const responses = [
-        `Reach us via WhatsApp: +2348000000000, Email: hello@freshchoice.ng, or call +2348000000000.`,
-        `You can contact us: WhatsApp +2348000000000, Email hello@freshchoice.ng.`,
-        `Need help? Call +2348000000000 or email hello@freshchoice.ng.`
+        `Reach us via WhatsApp: +2348149427453, Email: hello@freshchoice.ng, or call +2348000000000.`,
+        `You can contact us: WhatsApp +2348149427453, Email hello@freshchoice.ng.`,
+        `Need help? Call +2348149427453 or email hello@freshchoice.ng.`
       ];
       return responses[Math.floor(Math.random()*responses.length)];
     }
@@ -575,7 +576,7 @@
     reply: () => {
       const text = cartSummaryText();
       if(text.startsWith('Total:')) {
-        const url = `https://wa.me/2348000000000?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${text}`;
+        const url = `https://wa.me/2348149427453?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${text}`;
         document.getElementById('waQuick').href = url;
         const responses = [
           `Great! Tap “Checkout (WhatsApp)” or use this link:\n${decodeURIComponent(url)}`,
@@ -661,11 +662,11 @@
 
     function checkout(){
       const text = cartSummaryText();
-      const url = `https://wa.me/2348000000000?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${text}`;
+      const url = `https://wa.me/2348149427453?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${text}`;
       window.open(url,'_blank');
     }
     document.getElementById('checkoutBtn').addEventListener('click', checkout);
-    document.getElementById('waQuick').addEventListener('click', (e)=>{ e.currentTarget.href = `https://wa.me/2348000000000?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${cartSummaryText()}`; });
+    document.getElementById('waQuick').addEventListener('click', (e)=>{ e.currentTarget.href = `https://wa.me/2348149427453?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${cartSummaryText()}`; });
 
     /***************
      * UI helpers
