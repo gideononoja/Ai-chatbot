@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FreshChoice • Foodstuff Store + AI Assistant</title>
+  <meta name="description" content="Order rice, beans, yam, chicken, fresh fish and more. Chat with our AI for prices, delivery, and WhatsApp checkout."/>
+  <meta name="theme-color" content="#10b981" />
+  <style>
+    :root{
+      --bg:#0b1223; --bg-2:#0f172a; --panel:#0b1223cc; --card:#0f172ae6;
+      --text:#e2e8f0; --muted:#94a3b8; --brand:#10b981; --brand2:#14b8a6; --ring:#22d3ee;
+      --danger:#ef4444; --ok:#22c55e; --shadow:0 12px 40px rgba(0,0,0,.35); --r:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:
+        linear-gradient(0deg, rgba(6,10,20,.72), rgba(6,10,20,.72)),
+        url("https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&w=1920&q=80")
+        center/cover fixed;
+      letter-spacing:.1px;
+    }
+
+    /* App shell */
+    .app{display:grid; grid-template-columns: 300px 1fr; min-height:100vh; backdrop-filter: blur(8px);}
+    .sidebar{
+      background: linear-gradient(180deg, rgba(11,18,35,.9), rgba(11,18,35,.75));
+      border-right:1px solid rgba(255,255,255,.08);
+      padding:22px; display:flex; flex-direction:column; gap:18px;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--brand),var(--ring)); box-shadow:0 10px 30px rgba(16,185,129,.38)}
+    .brand h1{font-size:20px; margin:0}
+    .nav{display:flex;flex-direction:column;gap:10px; margin:6px 0 10px}
+    .nav button{
+      all:unset;display:flex;align-items:center;gap:12px; padding:12px 14px;border-radius:12px; cursor:pointer;
+      color:var(--text); border:1px solid transparent; transition:.2s;
+    }
+    .nav button:hover{background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.1)}
+    .nav button.active{background:rgba(16,185,129,.12); border-color:rgba(34,211,238,.25); box-shadow:inset 0 0 0 1px rgba(16,185,129,.25)}
+    .mini{margin-top:auto; font-size:12px; color:#9fb2d3}
+
+    .main{padding:28px; overflow:auto}
+    .section{display:none; animation:fade .3s ease}
+    .section.active{display:block}
+    @keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:translateY(0)}}
+
+    /* Hero */
+    .hero{display:grid; grid-template-columns: 1.1fr .9fr; gap:22px; margin-bottom:26px}
+    .card{background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:var(--r); box-shadow:var(--shadow)}
+    .pad{padding:20px}
+    .pill{display:inline-flex;gap:8px;align-items:center; padding:8px 12px;border-radius:999px;font-size:12px;margin:6px 8px 0 0;
+      background:rgba(16,185,129,.14); border:1px solid rgba(34,211,238,.28)}
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+    .chip{border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); padding:8px 12px; border-radius:999px; font-size:12px; cursor:pointer}
+    .btn{padding:12px 16px; border-radius:12px; border:1px solid rgba(34,211,238,.35);
+      background:linear-gradient(135deg,var(--brand),var(--brand2)); color:#052e2b; font-weight:700; cursor:pointer}
+    .btn.secondary{background:transparent;color:var(--text); border-color:rgba(255,255,255,.18)}
+    .toolbar{display:flex; gap:10px; justify-content:space-between; align-items:center; margin-top:10px}
+
+    /* Filters */
+    .filters{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:0 0 14px}
+    .filters input,.filters select{
+      padding:12px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+      background:rgba(2,6,23,.55); color:var(--text); outline:none
+    }
+    .filters input:focus,.filters select:focus{box-shadow:0 0 0 2px var(--ring)}
+
+    /* Grid products */
+    .grid{display:grid; gap:18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))}
+    .product{display:flex;flex-direction:column; overflow:hidden}
+    .product img{width:100%; height:160px; object-fit:cover; border-top-left-radius:var(--r); border-top-right-radius:var(--r)}
+    .badge{position:absolute;margin:10px; padding:6px 10px; border-radius:999px; background:rgba(16,185,129,.9); color:#062b26; font-weight:800; font-size:12px}
+    .info{padding:14px}
+    .name{margin:0 0 6px}
+    .meta{font-size:12px;color:#cbd5e1}
+    .price{color:#86efac; font-weight:800}
+    .actions{display:flex; gap:10px; margin-top:10px}
+    .qty{width:70px; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:transparent; color:var(--text)}
+    .like{margin-left:auto; cursor:pointer; opacity:.85}
+    .like:hover{opacity:1}
+
+    /* Chat */
+    .chat-wrap{max-width:900px;margin:auto}
+    .chat{height:460px;background:rgba(2,6,23,.5); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:14px; overflow:auto}
+    .bubble{max-width:78%; padding:12px 14px; border-radius:14px; margin:8px 0; line-height:1.55; box-shadow:0 2px 10px rgba(0,0,0,.25)}
+    .bot{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08)}
+    .user{background:rgba(16,185,129,.16); border:1px solid rgba(34,211,238,.25); margin-left:auto}
+    .timestamp{font-size:11px; color:var(--muted); margin:-4px 0 6px}
+    .typing{display:inline-flex; gap:4px; align-items:center}
+    .dot{width:6px;height:6px;border-radius:50%; background:var(--muted); opacity:.6; animation:blink 1s infinite}
+    .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+    @keyframes blink{50%{opacity:1}}
+    .input{display:flex; gap:10px; margin-top:12px}
+    .input input{flex:1; padding:14px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(2,6,23,.55); color:var(--text)}
+    .input input:focus{box-shadow:0 0 0 2px var(--ring)}
+
+    /* Cart pill & modal */
+    .cartpill{border-radius:999px; padding:8px 12px; background:rgba(16,185,129,.16); border:1px solid rgba(34,211,238,.25)}
+    dialog{border:none; border-radius:18px; background:var(--card); color:var(--text); width:min(700px, 92vw); box-shadow:var(--shadow)}
+    dialog::backdrop{background:rgba(0,0,0,.6)}
+    .cart-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.06)}
+    .cart-row img{width:56px; height:56px; object-fit:cover; border-radius:10px}
+    .x{all:unset; cursor:pointer; padding:6px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.06)}
+
+    /* Topbar mobile */
+    .topbar{display:none; position:sticky; top:0; z-index:10; padding:12px 16px; backdrop-filter:blur(8px);
+      background:linear-gradient(180deg, rgba(11,18,35,.88), rgba(11,18,35,.7)); border-bottom:1px solid rgba(255,255,255,.08)}
+    .hamburger{all:unset; cursor:pointer; font-size:22px}
+    .spacer{flex:1}
+
+    /* Responsive */
+    @media (max-width: 1000px){ .hero{grid-template-columns:1fr} }
+    @media (max-width: 860px){
+      .app{grid-template-columns: 1fr}
+      .sidebar{position:fixed; inset:0 42% 0 0; transform:translateX(-102%); transition:.25s; z-index:20}
+      .sidebar.open{transform:none}
+      .topbar{display:flex; align-items:center; gap:10px}
+    }
+  </style>
+</head>
+<body>
+  <!-- Mobile header -->
+  <div class="topbar">
+    <button class="hamburger" id="openNav">☰</button>
+    <div class="spacer"></div>
+    <div class="cartpill">🛒 <span id="cartCountTop">0</span> items</div>
+  </div>
+
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" aria-label="Main">
+      <div class="brand"><div class="logo" aria-hidden="true"></div><h1>FreshChoice</h1></div>
+      <div class="nav" role="tablist">
+        <button class="active" data-section="chat" role="tab">💬 Chat</button>
+        <button data-section="products" role="tab">🛒 Products</button>
+        <button data-section="about" role="tab">ℹ️ About</button>
+        <button data-section="contact" role="tab">☎️ Contact</button>
+      </div>
+      <div class="mini">© 2025 FreshChoice • Benue, NG</div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- Hero -->
+      <div class="hero">
+        <section class="card pad">
+          <h2 style="margin:0 0 6px">Welcome to FreshChoice Foodstuff Store</h2>
+          <div>
+            <span class="pill">Same-day delivery (Benue)</span>
+            <span class="pill">Pay on delivery</span>
+            <span class="pill">Fresh & verified</span>
+          </div>
+          <p style="margin:12px 0 0;color:#cbd5e1">
+            Order <b>rice</b>, <b>beans</b>, <b>yam</b>, <b>chicken</b>, <b>fresh fish</b>, oils, vegetables & more.
+            Ask the chatbot for prices, delivery, or to place an order. Use WhatsApp checkout when you’re ready.
+          </p>
+          <div class="chips" id="quickChips">
+            <span class="chip" data-msg="price list">Price list</span>
+            <span class="chip" data-msg="do you deliver to yaba?">Deliver to Yaba?</span>
+            <span class="chip" data-msg="payment methods">Payment methods</span>
+            <span class="chip" data-msg="open hours">Open hours</span>
+          </div>
+        </section>
+        <section class="card pad">
+          <div style="display:flex;align-items:center;gap:10px;justify-content:space-between">
+            <div class="cartpill">🛒 <span id="cartCount">0</span> items</div>
+            <div style="display:flex;gap:10px">
+              <button class="btn secondary" id="viewCart">View Cart</button>
+              <button class="btn" id="checkoutBtn">Checkout (WhatsApp)</button>
+            </div>
+          </div>
+          <h3 style="margin:14px 0 10px">Today’s Highlights</h3>
+          <ul style="margin:0;padding-left:18px;color:#cbd5e1">
+            <li>Rice 50kg — <span class="price">₦42,000</span></li>
+            <li>Beans 50kg — <span class="price">₦18,000</span></li>
+            <li>Chicken (per kg) — <span class="price">₦3,500</span></li>
+            <li>Fresh fish (per kg) — <span class="price">₦2,500</span></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Chat Section -->
+      <section id="chat" class="section active" aria-labelledby="chat">
+        <div class="chat-wrap">
+          <div id="chatBox" class="chat" aria-live="polite"></div>
+          <div class="toolbar">
+            <div class="chips" id="toolbarChips">
+              <span class="chip" data-msg="delivery to ikeja">Delivery to Ikeja</span>
+              <span class="chip" data-msg="contact">Contact</span>
+              <span class="chip" data-msg="discount">Any discount?</span>
+              <span class="chip" data-msg="add rice 1">Add rice x1</span>
+              <span class="chip" data-msg="checkout">Checkout</span>
+            </div>
+            <button class="btn secondary" id="clearChat">Clear chat</button>
+          </div>
+          <div class="input">
+            <input id="msg" type="text" placeholder="Type a message… (press Enter)" autocomplete="off" aria-label="Message"/>
+            <button class="btn" id="sendBtn">Send</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Products -->
+      <section id="products" class="section" aria-labelledby="products">
+        <div class="card pad" style="margin-bottom:14px">
+          <div class="filters">
+            <input id="search" placeholder="Search products…" />
+            <select id="category">
+              <option value="all">All categories</option>
+              <option value="grains">Grains</option>
+              <option value="proteins">Proteins</option>
+              <option value="produce">Produce</option>
+              <option value="pantry">Pantry</option>
+            </select>
+            <select id="sort">
+              <option value="popular">Sort: Popular</option>
+              <option value="price-asc">Price: Low → High</option>
+              <option value="price-desc">Price: High → Low</option>
+              <option value="name-asc">Name: A → Z</option>
+            </select>
+            <button class="btn secondary" id="resetFilters">Reset</button>
+          </div>
+        </div>
+        <div class="grid" id="productGrid" aria-live="polite"></div>
+      </section>
+
+      <!-- About -->
+      <section id="about" class="section">
+        <div class="card pad">
+          <h2>About FreshChoice</h2>
+          <p style="color:#cbd5e1;max-width:900px">
+            We supply premium foodstuff to homes, restaurants, and bulk buyers across Benue. Our
+            products are fresh, fairly priced, and delivered fast — with pay-on-delivery options.
+          </p>
+          <ul style="margin:10px 0 0; padding-left:18px; color:#cbd5e1">
+            <li>🥩 Meat & Chicken</li>
+            <li>🐟 Fresh Fish & Seafood</li>
+            <li>🍚 Rice, Beans & Grains</li>
+            <li>🥔 Tubers (Yam, Potatoes)</li>
+            <li>🥬 Vegetables & Fruits</li>
+            <li>🛢️ Cooking Oil & Spices</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Contact -->
+      <section id="contact" class="section">
+        <div class="card pad">
+          <h2>Contact & Orders</h2>
+          <p style="color:#cbd5e1">Open <b>Mon–Sat, 8:00–19:00</b>. Same-day delivery within Benue.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+            <a class="x" href="tel:+2348000000000">📞 +234 8149427453</a>
+            <a class="x" href="mailto:hello@freshchoice.ng">✉️ hello@freshchoice.ng</a>
+            <a class="x" id="waQuick" href="#" target="_blank" rel="noopener">🟢 WhatsApp us</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Cart modal -->
+  <dialog id="cartDialog">
+    <div class="pad">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <h3 style="margin:0">Your Cart</h3>
+        <button class="x" id="closeCart">Close</button>
+      </div>
+      <div id="cartList" style="margin-top:8px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px">
+        <div><b>Total:</b> <span id="cartTotal">₦0</span></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn secondary" id="clearCart">Clear</button>
+          <button class="btn" id="goCheckout">Checkout (WhatsApp)</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    /***************
+     * Product data
+     ***************/
+    const products = [
+  // grains
+  { id:'rice50',  name:'Rice (50kg)',   price:42000, cat:'grains',   img:'images/rice50.jpg', tag:'Bestseller' },
+  { id:'beans50', name:'Beans (50kg)',  price:18000, cat:'grains',   img:'images/beans50.jpg', tag:'Fresh' },
+  { id:'noodles', name:'Noodles (carton)', price:25000, cat:'grains', img:'images/noodles.jpg' },
+
+  // proteins
+  { id:'chicken', name:'Chicken (per kg)', price:3500, cat:'proteins', img:'images/chicken.jpg', tag:'Halal' },
+  { id:'fish',    name:'Fresh Fish (per kg)', price:2500, cat:'proteins', img:'images/fish.jpg', tag:'Morning Catch' },
+
+  // produce
+  { id:'tomatoes', name:'Tomatoes (basket)', price:12000, cat:'produce', img:'images/tomatoes.jpg', tag:'Juicy' },
+  { id:'onions',   name:'Onions (bag)', price:15000, cat:'produce', img:'images/onions.jpg' },
+  { id:'peppers',  name:'Mixed Peppers (10kg)', price:10000, cat:'produce', img:'images/peppers.jpg' },
+  { id:'yam',      name:'Yam (tuber)', price:1200, cat:'produce', img:'images/yam.jpg' },
+
+  // pantry
+  { id:'oil25',   name:'Vegetable Oil (25L)', price:10000, cat:'pantry', img:'images/oil25.jpg' },
+  { id:'spices',  name:'Mixed Spices Pack', price:3500, cat:'pantry', img:'images/spices.jpg' },
+  { id:'salt',    name:'Sea Salt (5kg)', price:4500, cat:'pantry', img:'images/salt.jpg' }
+];
+
+
+    const money = n => new Intl.NumberFormat('en-NG', { style:'currency', currency:'NGN', maximumFractionDigits:0 }).format(n);
+
+    /***************
+     * Cart (persist)
+     ***************/
+    const cart = JSON.parse(localStorage.getItem('fc_cart')||'{}'); // {id: qty}
+    function cartCount(){ return Object.values(cart).reduce((a,b)=>a+b,0) }
+    function updateCartUI(){
+      document.getElementById('cartCount').textContent = cartCount();
+      document.getElementById('cartCountTop').textContent = cartCount();
+      localStorage.setItem('fc_cart', JSON.stringify(cart));
+    }
+    function addToCart(id, qty=1){
+      cart[id]=(cart[id]||0)+qty; updateCartUI(); toast('Added to cart');
+    }
+    function removeFromCart(id){ delete cart[id]; updateCartUI(); renderCartDialog(); }
+    function cartSummaryText(){
+      const lines=[]; let total=0;
+      for(const [id,qty] of Object.entries(cart)){
+        const p=products.find(x=>x.id===id); if(!p) continue;
+        const line=p.price*qty; total+=line; lines.push(`${p.name} x${qty} — ${money(line)}`);
+      }
+      lines.push(`Total: ${money(total)}`);
+      return lines.join('%0A');
+    }
+
+    /***************
+     * Render products
+     ***************/
+    const grid = document.getElementById('productGrid');
+    const search = document.getElementById('search');
+    const category = document.getElementById('category');
+    const sortSel = document.getElementById('sort');
+    const resetFilters = document.getElementById('resetFilters');
+
+    function renderProducts(){
+      let list = [...products];
+      const q = (search.value||'').toLowerCase();
+      const cat = category.value;
+
+      if(q) list = list.filter(p => (p.name.toLowerCase().includes(q) || p.cat.includes(q)));
+      if(cat!=='all') list = list.filter(p => p.cat === cat);
+
+      switch (sortSel.value){
+        case 'price-asc':  list.sort((a,b)=>a.price-b.price); break;
+        case 'price-desc': list.sort((a,b)=>b.price-a.price); break;
+        case 'name-asc':   list.sort((a,b)=>a.name.localeCompare(b.name)); break;
+        default:           /* popular */ break;
+      }
+
+      grid.innerHTML = list.map(p => `
+        <article class="card product">
+          <div style="position:relative">
+            ${p.tag?`<span class="badge">${p.tag}</span>`:''}
+            <img loading="lazy" src="${p.img}" alt="${p.name}">
+          </div>
+          <div class="info">
+            <h3 class="name">${p.name}</h3>
+            <div class="meta">${p.cat.toUpperCase()}</div>
+            <div class="price" aria-label="Price">${money(p.price)}</div>
+            <div class="actions">
+              <input class="qty" type="number" min="1" value="1" aria-label="Quantity for ${p.name}">
+              <button class="btn" data-add="${p.id}">Add</button>
+              <button class="btn secondary" data-ask="${p.id}">Ask price</button>
+              <button class="x like" title="Save for later" data-like="${p.id}">♡</button>
+            </div>
+          </div>
+        </article>
+      `).join('') || `<div class="card pad">No products match your filters.</div>`;
+    }
+    renderProducts();
+    [search,category,sortSel].forEach(el => el.addEventListener('input', renderProducts));
+    resetFilters.addEventListener('click', ()=>{ search.value=''; category.value='all'; sortSel.value='popular'; renderProducts(); });
+
+    grid.addEventListener('click', e=>{
+      if(e.target.matches('[data-add]')){
+        const card = e.target.closest('.product');
+        const qty = Math.max(1, parseInt(card.querySelector('.qty').value||'1',10));
+        addToCart(e.target.dataset.add, qty);
+      }
+      if(e.target.matches('[data-ask]')){
+        const id = e.target.dataset.ask; const p=products.find(x=>x.id===id);
+        if(p) handleMessage(`how much is ${p.name}`);
+      }
+      if(e.target.matches('[data-like]')){ toast('Saved for later'); }
+    });
+
+    /***************
+     * Sections / Nav
+     ***************/
+    const sections = [...document.querySelectorAll('.section')];
+    const navBtns = [...document.querySelectorAll('.nav button')];
+    navBtns.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        navBtns.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const id = btn.dataset.section;
+        sections.forEach(s=>s.classList.toggle('active', s.id===id));
+        sidebar.classList.remove('open');
+      });
+    });
+
+    /***************
+     * Chatbot (NLU-lite)
+     ***************/
+    const chat = document.getElementById('chatBox');
+    const input = document.getElementById('msg');
+    const sendBtn = document.getElementById('sendBtn');
+    const clearBtn = document.getElementById('clearChat');
+
+    // Persist chat
+    const history = JSON.parse(localStorage.getItem('fc_history')||'[]');
+    history.forEach(m=>appendBubble(m.text, m.sender, false));
+    if(history.length===0) greet();
+
+    function greet(){
+      appendBubble("Hi! I'm FreshChoice Assistant 🤖. Ask me for the price list, delivery fees, open hours, or type a product (e.g., 'rice', 'fish'). You can also add items from the Products page and checkout via WhatsApp.", 'bot');
+    }
+    function appendBubble(text, who='bot', save=true){
+      const b = document.createElement('div'); b.className=`bubble ${who}`; b.innerText=text; chat.appendChild(b);
+      const t=document.createElement('div'); t.className='timestamp'; t.textContent=new Date().toLocaleTimeString(); chat.appendChild(t);
+      chat.scrollTop=chat.scrollHeight;
+      if(save){ history.push({sender:who, text, ts: Date.now()}); localStorage.setItem('fc_history', JSON.stringify(history)); }
+    }
+    function typing(on=true){
+      if(on){ const t=document.createElement('div'); t.className='bubble bot'; t.id='typing';
+        t.innerHTML='<span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>'; chat.appendChild(t); chat.scrollTop=chat.scrollHeight;}
+      else{ const t=document.getElementById('typing'); if(t) t.remove(); }
+    }
+    function send(){ const text=(input.value||'').trim(); if(!text) return; appendBubble(text,'user'); input.value=''; handleMessage(text); }
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+    sendBtn.addEventListener('click', send);
+    clearBtn.addEventListener('click', ()=>{ localStorage.removeItem('fc_history'); chat.innerHTML=''; greet(); });
+
+    // Chips
+    const quickChips=document.getElementById('quickChips'); const toolbarChips=document.getElementById('toolbarChips');
+    [quickChips, toolbarChips].forEach(el => el.addEventListener('click', e=>{
+      const chip=e.target.closest('.chip'); if(!chip) return; handleMessage(chip.dataset.msg);
+    }));
+
+    // Helpers
+    const norm=s=>s.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim();
+    function levenshtein(a,b){ a=norm(a); b=norm(b); const m=[]; for(let i=0;i<=b.length;i++){m[i]=[i]} for(let j=0;j<=a.length;j++){m[0][j]=j}
+      for(let i=1;i<=b.length;i++){ for(let j=1;j<=a.length;j++){ m[i][j]=Math.min(m[i-1][j]+1, m[i][j-1]+1, m[i-1][j-1]+(a[j-1]===b[i-1]?0:1)); } } return m[b.length][a.length];}
+    const similar=(q,t)=>{ const d=levenshtein(q,t); const max=Math.max(q.length,t.length)||1; return 1-d/max }
+
+    // Intents
+    const intents = [
+  { 
+    test: q => /price\s*list|price|cost/i.test(q),
+    reply: () => {
+      const responses = [
+        `Sure! Here's our price list:\n` + products.slice(0,8).map(p=>`• ${p.name}: ${money(p.price)}`).join('\n'),
+        `Here you go! Check our prices:\n` + products.slice(0,8).map(p=>`• ${p.name}: ${money(p.price)}`).join('\n'),
+        `These are our current prices:\n` + products.slice(0,8).map(p=>`• ${p.name}: ${money(p.price)}`).join('\n')
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /open|hours|time|closing/i.test(q),
+    reply: () => {
+      const responses = [
+        `We're open Mon–Sat, 8:00–19:00. Same-day delivery within Lagos.`,
+        `Operating hours: Mon–Sat, 8am to 7pm. Place your order anytime!`,
+        `You can shop from us Monday to Saturday, 8:00–19:00.`
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /deliver|delivery|ship|yaba|ikeja|lekki|fee/i.test(q),
+    reply: q => {
+      const area = (q.match(/to\s+([a-z ]+)/i)||[])[1] || 'your area';
+      const responses = [
+        `Yes, we deliver to ${area.trim()}! Delivery fees: ₦1,500–₦3,000.`,
+        `Delivery to ${area.trim()} is available. Fees depend on distance, usually ₦1,500–₦3,000.`,
+        `Absolutely! We can ship to ${area.trim()}. Orders before 3pm go out same-day.`
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /pay|payment|transfer|pos|cash|pod/i.test(q),
+    reply: () => {
+      const responses = [
+        `We accept cash, bank transfer, POS, and Pay on Delivery within Lagos.`,
+        `Payment methods: cash, POS, transfer. You can pay on delivery!`,
+        `Pay conveniently via cash, transfer, or POS. Delivery in Lagos only.`
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /contact|phone|whatsapp|call|email/i.test(q),
+    reply: () => {
+      const responses = [
+        `Reach us via WhatsApp: +2348000000000, Email: hello@freshchoice.ng, or call +2348000000000.`,
+        `You can contact us: WhatsApp +2348000000000, Email hello@freshchoice.ng.`,
+        `Need help? Call +2348000000000 or email hello@freshchoice.ng.`
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /discount|deal|promo|bulk/i.test(q),
+    reply: () => {
+      const responses = [
+        `Bulk discounts are available! Let me know which products you need.`,
+        `We have special deals on rice, beans, and chicken for bulk buyers.`,
+        `Want a discount? Order in bulk and save big on our staples!`
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  // Product price fuzzy match
+  { 
+    test: q => {
+      const best = products.map(p=>({p,score:Math.max(similar(q,p.name), ...p.name.split(/\s+/).map(w=>similar(q,w)))})).sort((a,b)=>b.score-a.score)[0];
+      return best.score>0.48 ? best : null;
+    },
+    reply: (q, match) => {
+      const responses = [
+        `${match.p.name} costs ${money(match.p.price)}. You can add it from Products or say “add ${match.p.name} 1”.`,
+        `The price of ${match.p.name} is ${money(match.p.price)}. Ready to add to cart?`,
+        `That would be ${money(match.p.price)} for ${match.p.name}. Add to cart if you like!`
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  // Add to cart via chat
+  { 
+    test: q => /^add\s+/.test(norm(q)),
+    reply: q => {
+      const m = norm(q).match(/^add\s+(.+?)\s+(\d+)$/) || norm(q).match(/^add\s+(.+)$/);
+      if(!m) return `Try: add rice 2`;
+      const name = m[1]; const qty = parseInt(m[2]||'1',10);
+      const best = products.map(p=>({p,s:similar(name,p.name)})).sort((a,b)=>b.s-a.s)[0];
+      if(!best || best.s<0.45) return `I couldn’t find that product. Try “add rice 1”.`;
+      addToCart(best.p.id, qty);
+      const responses = [
+        `${best.p.name} x${qty} added to cart. Use “checkout” when ready.`,
+        `Got it! Added ${qty} of ${best.p.name} to your cart.`,
+        `${best.p.name} (${qty}) is now in your cart. Ready to checkout?`
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /remove|delete/.test(norm(q)),
+    reply: q => {
+      const m = norm(q).match(/(?:remove|delete)\s+(.+)/); if(!m) return `Say “remove rice”`;
+      const name = m[1]; const best = products.map(p=>({p,s:similar(name,p.name)})).sort((a,b)=>b.s-a.s)[0];
+      if(!best||!cart[best.p.id]) return `That item isn’t in your cart.`;
+      removeFromCart(best.p.id);
+      const responses = [
+        `${best.p.name} removed from cart.`,
+        `Removed ${best.p.name}.`,
+        `${best.p.name} has been deleted from your cart.`
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /checkout|buy|order/i.test(q),
+    reply: () => {
+      const text = cartSummaryText();
+      if(text.startsWith('Total:')) {
+        const url = `https://wa.me/2348000000000?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${text}`;
+        document.getElementById('waQuick').href = url;
+        const responses = [
+          `Great! Tap “Checkout (WhatsApp)” or use this link:\n${decodeURIComponent(url)}`,
+          `You're ready to checkout! Click here: ${decodeURIComponent(url)}`,
+          `All set! Your order summary: ${decodeURIComponent(url)}`
+        ];
+        return responses[Math.floor(Math.random()*responses.length)];
+      }
+      return `Your cart is empty. Add products first.`;
+    }
+  },
+];
+
+
+
+
+    function handleMessage(raw){
+      const q = raw.trim();
+      appendTypingReply(async ()=>{
+        for(const intent of intents){
+          const test = intent.test(q);
+          if(test){
+            const r = typeof intent.reply==='function' ? intent.reply(q, test===true?null:test) : intent.reply;
+            return typeof r==='string' ? r : await r;
+          }
+        }
+        // fallback: keyword price
+        const kw = products.find(p => norm(q).includes(norm(p.name.split(' ')[0])));
+        if(kw) return `${kw.name} is ${money(kw.price)}.`;
+        return `Sorry, I didn’t catch that. Ask for the price list, delivery, payments, or a product like “how much is rice?”.`;
+      });
+    }
+    function appendTypingReply(makeText){
+      typing(true);
+      setTimeout(async ()=>{ typing(false); appendBubble(await makeText(),'bot'); }, 650 + Math.random()*550);
+    }
+
+    /***************
+     * Sidebar (mobile)
+     ***************/
+    const sidebar = document.getElementById('sidebar');
+    document.getElementById('openNav').addEventListener('click', ()=> sidebar.classList.toggle('open'));
+
+    /***************
+     * Cart modal + checkout
+     ***************/
+    const dlg = document.getElementById('cartDialog');
+    document.getElementById('viewCart').addEventListener('click', ()=>{ renderCartDialog(); dlg.showModal(); });
+    document.getElementById('closeCart').addEventListener('click', ()=> dlg.close());
+    document.getElementById('clearCart').addEventListener('click', ()=>{ for(const k of Object.keys(cart)) delete cart[k]; updateCartUI(); renderCartDialog(); });
+    document.getElementById('goCheckout').addEventListener('click', ()=> checkout());
+
+    function renderCartDialog(){
+      const list = document.getElementById('cartList');
+      const rows = Object.entries(cart).map(([id,qty])=>{
+        const p=products.find(x=>x.id===id); if(!p) return '';
+        return `
+          <div class="cart-row">
+            <div style="display:flex;align-items:center;gap:12px">
+              <img src="${p.img}" alt="${p.name}">
+              <div>
+                <div><b>${p.name}</b></div>
+                <div style="color:#cbd5e1">${qty} × ${money(p.price)} = <b>${money(p.price*qty)}</b></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="x" data-dec="${id}">−</button>
+              <span>${qty}</span>
+              <button class="x" data-inc="${id}">+</button>
+              <button class="x" data-rem="${id}">Remove</button>
+            </div>
+          </div>`;
+      }).join('') || `<div style="padding:16px;color:#cbd5e1">Your cart is empty.</div>`;
+      list.innerHTML = rows;
+
+      let total=0; for(const [id,qty] of Object.entries(cart)){ const p=products.find(x=>x.id===id); if(p) total+=p.price*qty; }
+      document.getElementById('cartTotal').textContent = money(total);
+
+      list.querySelectorAll('[data-inc]').forEach(b=> b.onclick=()=>{ cart[b.dataset.inc]++; updateCartUI(); renderCartDialog(); });
+      list.querySelectorAll('[data-dec]').forEach(b=> b.onclick=()=>{ cart[b.dataset.dec]=Math.max(1, cart[b.dataset.dec]-1); updateCartUI(); renderCartDialog(); });
+      list.querySelectorAll('[data-rem]').forEach(b=> b.onclick=()=>{ delete cart[b.dataset.rem]; updateCartUI(); renderCartDialog(); });
+    }
+
+    function checkout(){
+      const text = cartSummaryText();
+      const url = `https://wa.me/2348000000000?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${text}`;
+      window.open(url,'_blank');
+    }
+    document.getElementById('checkoutBtn').addEventListener('click', checkout);
+    document.getElementById('waQuick').addEventListener('click', (e)=>{ e.currentTarget.href = `https://wa.me/2348000000000?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${cartSummaryText()}`; });
+
+    /***************
+     * UI helpers
+     ***************/
+    function toast(msg){
+      const t=document.createElement('div');
+      t.textContent=msg; t.style.position='fixed'; t.style.right='16px'; t.style.bottom='16px';
+      t.style.padding='10px 14px'; t.style.borderRadius='12px';
+      t.style.background='rgba(16,185,129,.97)'; t.style.color='#062b26'; t.style.fontWeight='800';
+      t.style.boxShadow='var(--shadow)'; t.style.zIndex='999'; document.body.appendChild(t);
+      setTimeout(()=>t.remove(), 1400);
+    }
+
+    // init
+    updateCartUI();
+
+    // Chat helpers bound late (kept here for readability)
+    function appendMessage(text){ appendBubble(text,'user'); handleMessage(text); }
+  </script>
+</body>
+</html>
