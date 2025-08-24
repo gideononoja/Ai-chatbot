@@ -141,7 +141,28 @@
         <button data-section="about" role="tab">ℹ️ About</button>
         <button data-section="contact" role="tab">☎️ Contact</button>
       </div>
-      <div class="mini">© 2025 FreshChoice • Benue, NG</div>
+      <footer class="footer">
+ <footer class="footer">
+  <p>© 2025 FreshChoice Groceries. All Rights Reserved.</p>
+
+  <div class="socials">
+    <p>Follow us on our social media platforms:</p>
+    <a href="https://facebook.com" target="_blank" aria-label="Facebook">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" alt="Facebook" style="width:20px; height:20px;">
+    </a>
+    <a href="https://instagram.com" target="_blank" aria-label="Instagram">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram" style="width:20px; height:20px;">
+    </a>
+    <a href="https://twitter.com" target="_blank" aria-label="Twitter">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/x.svg" alt="Twitter" style="width:20px; height:20px;">
+    </a>
+    <a href="https://wa.me/1234567890" target="_blank" aria-label="WhatsApp">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/whatsapp.svg" alt="WhatsApp" style="width:20px; height:20px;">
+    </a>
+  </div>
+</footer>
+
+
     </aside>
 
     <!-- Main -->
@@ -410,52 +431,53 @@
       });
     });
 
+    
     /***************
      * Chatbot (NLU-lite)
      ***************/
-    const chat = document.getElementById('chatBox');
-    const input = document.getElementById('msg');
-    const sendBtn = document.getElementById('sendBtn');
-    const clearBtn = document.getElementById('clearChat');
+const chat = document.getElementById('chatBox');
+const input = document.getElementById('msg');
+const sendBtn = document.getElementById('sendBtn');
+const clearBtn = document.getElementById('clearChat');
 
-    // Persist chat
-    const history = JSON.parse(localStorage.getItem('fc_history')||'[]');
-    history.forEach(m=>appendBubble(m.text, m.sender, false));
-    if(history.length===0) greet();
+// Persist chat
+const history = JSON.parse(localStorage.getItem('fc_history')||'[]');
+history.forEach(m=>appendBubble(m.text, m.sender, false));
+if(history.length===0) greet();
 
-    function greet(){
-      appendBubble("Hi! I'm FreshChoice Assistant 🤖. Ask me for the price list, delivery fees, open hours, or type a product (e.g., 'rice', 'fish'). You can also add items from the Products page and checkout via WhatsApp.", 'bot');
-    }
-    function appendBubble(text, who='bot', save=true){
-      const b = document.createElement('div'); b.className=`bubble ${who}`; b.innerText=text; chat.appendChild(b);
-      const t=document.createElement('div'); t.className='timestamp'; t.textContent=new Date().toLocaleTimeString(); chat.appendChild(t);
-      chat.scrollTop=chat.scrollHeight;
-      if(save){ history.push({sender:who, text, ts: Date.now()}); localStorage.setItem('fc_history', JSON.stringify(history)); }
-    }
-    function typing(on=true){
-      if(on){ const t=document.createElement('div'); t.className='bubble bot'; t.id='typing';
-        t.innerHTML='<span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>'; chat.appendChild(t); chat.scrollTop=chat.scrollHeight;}
-      else{ const t=document.getElementById('typing'); if(t) t.remove(); }
-    }
-    function send(){ const text=(input.value||'').trim(); if(!text) return; appendBubble(text,'user'); input.value=''; handleMessage(text); }
-    input.addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
-    sendBtn.addEventListener('click', send);
-    clearBtn.addEventListener('click', ()=>{ localStorage.removeItem('fc_history'); chat.innerHTML=''; greet(); });
+function greet(){
+  appendBubble("Hi! I'm FreshChoice Assistant 🤖. Ask me for the price list, delivery fees, open hours, or type a product (e.g., 'rice', 'fish'). You can also add items from the Products page and checkout via WhatsApp.", 'bot');
+}
+function appendBubble(text, who='bot', save=true){
+  const b = document.createElement('div'); b.className=`bubble ${who}`; b.innerText=text; chat.appendChild(b);
+  const t=document.createElement('div'); t.className='timestamp'; t.textContent=new Date().toLocaleTimeString(); chat.appendChild(t);
+  chat.scrollTop=chat.scrollHeight;
+  if(save){ history.push({sender:who, text, ts: Date.now()}); localStorage.setItem('fc_history', JSON.stringify(history)); }
+}
+function typing(on=true){
+  if(on){ const t=document.createElement('div'); t.className='bubble bot'; t.id='typing';
+    t.innerHTML='<span class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>'; chat.appendChild(t); chat.scrollTop=chat.scrollHeight;}
+  else{ const t=document.getElementById('typing'); if(t) t.remove(); }
+}
+function send(){ const text=(input.value||'').trim(); if(!text) return; appendBubble(text,'user'); input.value=''; handleMessage(text); }
+input.addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+sendBtn.addEventListener('click', send);
+clearBtn.addEventListener('click', ()=>{ localStorage.removeItem('fc_history'); chat.innerHTML=''; greet(); });
 
-    // Chips
-    const quickChips=document.getElementById('quickChips'); const toolbarChips=document.getElementById('toolbarChips');
-    [quickChips, toolbarChips].forEach(el => el.addEventListener('click', e=>{
-      const chip=e.target.closest('.chip'); if(!chip) return; handleMessage(chip.dataset.msg);
-    }));
+// Chips
+const quickChips=document.getElementById('quickChips'); const toolbarChips=document.getElementById('toolbarChips');
+[quickChips, toolbarChips].forEach(el => el.addEventListener('click', e=>{
+  const chip=e.target.closest('.chip'); if(!chip) return; handleMessage(chip.dataset.msg);
+}));
 
-    // Helpers
-    const norm=s=>s.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim();
-    function levenshtein(a,b){ a=norm(a); b=norm(b); const m=[]; for(let i=0;i<=b.length;i++){m[i]=[i]} for(let j=0;j<=a.length;j++){m[0][j]=j}
-      for(let i=1;i<=b.length;i++){ for(let j=1;j<=a.length;j++){ m[i][j]=Math.min(m[i-1][j]+1, m[i][j-1]+1, m[i-1][j-1]+(a[j-1]===b[i-1]?0:1)); } } return m[b.length][a.length];}
-    const similar=(q,t)=>{ const d=levenshtein(q,t); const max=Math.max(q.length,t.length)||1; return 1-d/max }
+// Helpers
+const norm=s=>s.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim();
+function levenshtein(a,b){ a=norm(a); b=norm(b); const m=[]; for(let i=0;i<=b.length;i++){m[i]=[i]} for(let j=0;j<=a.length;j++){m[0][j]=j}
+  for(let i=1;i<=b.length;i++){ for(let j=1;j<=a.length;j++){ m[i][j]=Math.min(m[i-1][j]+1, m[i][j-1]+1, m[i-1][j-1]+(a[j-1]===b[i-1]?0:1)); } } return m[b.length][a.length];}
+const similar=(q,t)=>{ const d=levenshtein(q,t); const max=Math.max(q.length,t.length)||1; return 1-d/max }
 
-    // Intents
-    const intents = [
+// Intents
+const intents = [
   { 
     test: q => /price\s*list|price|cost/i.test(q),
     reply: () => {
@@ -463,6 +485,72 @@
         `Sure! Here's our price list:\n` + products.slice(0,8).map(p=>`• ${p.name}: ${money(p.price)}`).join('\n'),
         `Here you go! Check our prices:\n` + products.slice(0,8).map(p=>`• ${p.name}: ${money(p.price)}`).join('\n'),
         `These are our current prices:\n` + products.slice(0,8).map(p=>`• ${p.name}: ${money(p.price)}`).join('\n')
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /open|hours|time|closing/i.test(q),
+    reply: () => {
+      const responses = [
+        `We're open Mon–Sat, 8:00–19:00. Same-day delivery within Lagos.`,
+        `Operating hours: Mon–Sat, 8am to 7pm. Place your order anytime!`,
+        `You can shop from us Monday to Saturday, 8:00–19:00.`
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /hello|hi|hey|good\s*(morning|afternoon|evening)?/i.test(q),
+    reply: () => {
+      const responses = [
+        "Hey there 👋! How’s your day going?",
+        "Hello! Great to see you here 😊. What can I help you with?",
+        "Hi! Need groceries today or just checking our prices?"
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /thank(s| you)?/i.test(q),
+    reply: () => {
+      const responses = [
+        "You're most welcome! 🥰",
+        "Anytime! Happy to help 💚",
+        "Glad I could help! Do you want to place an order?"
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /delivery|ship|transport|bring/i.test(q),
+    reply: () => {
+      const responses = [
+        "We deliver within Lagos 🚚. Same-day delivery available if you order before 5pm.",
+        "Delivery fees vary by location — usually ₦800–₦1500 inside Lagos.",
+        "Yes, we deliver! Just add products to your cart and checkout via WhatsApp."
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /how are you|what’s up|are you ok/i.test(q),
+    reply: () => {
+      const responses = [
+        "I'm doing great, thanks for asking 🤖✨. How about you?",
+        "All good here, always ready to help with your shopping 🛒.",
+        "Feeling fresh, just like our groceries 😄. How are you?"
+      ];
+      return responses[Math.floor(Math.random()*responses.length)];
+    }
+  },
+  { 
+    test: q => /bye|goodbye|see you/i.test(q),
+    reply: () => {
+      const responses = [
+        "Goodbye! Hope to see you soon 🌸",
+        "Take care! Don’t forget to check our discounts 😎",
+        "Bye! Wishing you a fresh and happy day 🌿"
       ];
       return responses[Math.floor(Math.random()*responses.length)];
     }
@@ -590,101 +678,98 @@
   },
 ];
 
-
-
-
-    function handleMessage(raw){
-      const q = raw.trim();
-      appendTypingReply(async ()=>{
-        for(const intent of intents){
-          const test = intent.test(q);
-          if(test){
-            const r = typeof intent.reply==='function' ? intent.reply(q, test===true?null:test) : intent.reply;
-            return typeof r==='string' ? r : await r;
-          }
-        }
-        // fallback: keyword price
-        const kw = products.find(p => norm(q).includes(norm(p.name.split(' ')[0])));
-        if(kw) return `${kw.name} is ${money(kw.price)}.`;
-        return `Sorry, I didn’t catch that. Ask for the price list, delivery, payments, or a product like “how much is rice?”.`;
-      });
+function handleMessage(raw){
+  const q = raw.trim();
+  appendTypingReply(async ()=>{
+    for(const intent of intents){
+      const test = intent.test(q);
+      if(test){
+        const r = typeof intent.reply==='function' ? intent.reply(q, test===true?null:test) : intent.reply;
+        return typeof r==='string' ? r : await r;
+      }
     }
-    function appendTypingReply(makeText){
-      typing(true);
-      setTimeout(async ()=>{ typing(false); appendBubble(await makeText(),'bot'); }, 650 + Math.random()*550);
-    }
+    // fallback: keyword price
+    const kw = products.find(p => norm(q).includes(norm(p.name.split(' ')[0])));
+    if(kw) return `${kw.name} is ${money(kw.price)}.`;
+    return `Sorry, I didn’t catch that. Ask for the price list, delivery, payments, or a product like “how much is rice?”.`;
+  });
+}
+function appendTypingReply(makeText){
+  typing(true);
+  setTimeout(async ()=>{ typing(false); appendBubble(await makeText(),'bot'); }, 650 + Math.random()*550);
+}
 
-    /***************
-     * Sidebar (mobile)
-     ***************/
-    const sidebar = document.getElementById('sidebar');
-    document.getElementById('openNav').addEventListener('click', ()=> sidebar.classList.toggle('open'));
+/***************
+ * Sidebar (mobile)
+ ***************/
+const sidebar = document.getElementById('sidebar');
+document.getElementById('openNav').addEventListener('click', ()=> sidebar.classList.toggle('open'));
 
-    /***************
-     * Cart modal + checkout
-     ***************/
-    const dlg = document.getElementById('cartDialog');
-    document.getElementById('viewCart').addEventListener('click', ()=>{ renderCartDialog(); dlg.showModal(); });
-    document.getElementById('closeCart').addEventListener('click', ()=> dlg.close());
-    document.getElementById('clearCart').addEventListener('click', ()=>{ for(const k of Object.keys(cart)) delete cart[k]; updateCartUI(); renderCartDialog(); });
-    document.getElementById('goCheckout').addEventListener('click', ()=> checkout());
+/***************
+ * Cart modal + checkout
+ ***************/
+const dlg = document.getElementById('cartDialog');
+document.getElementById('viewCart').addEventListener('click', ()=>{ renderCartDialog(); dlg.showModal(); });
+document.getElementById('closeCart').addEventListener('click', ()=> dlg.close());
+document.getElementById('clearCart').addEventListener('click', ()=>{ for(const k of Object.keys(cart)) delete cart[k]; updateCartUI(); renderCartDialog(); });
+document.getElementById('goCheckout').addEventListener('click', ()=> checkout());
 
-    function renderCartDialog(){
-      const list = document.getElementById('cartList');
-      const rows = Object.entries(cart).map(([id,qty])=>{
-        const p=products.find(x=>x.id===id); if(!p) return '';
-        return `
-          <div class="cart-row">
-            <div style="display:flex;align-items:center;gap:12px">
-              <img src="${p.img}" alt="${p.name}">
-              <div>
-                <div><b>${p.name}</b></div>
-                <div style="color:#cbd5e1">${qty} × ${money(p.price)} = <b>${money(p.price*qty)}</b></div>
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <button class="x" data-dec="${id}">−</button>
-              <span>${qty}</span>
-              <button class="x" data-inc="${id}">+</button>
-              <button class="x" data-rem="${id}">Remove</button>
-            </div>
-          </div>`;
-      }).join('') || `<div style="padding:16px;color:#cbd5e1">Your cart is empty.</div>`;
-      list.innerHTML = rows;
+function renderCartDialog(){
+  const list = document.getElementById('cartList');
+  const rows = Object.entries(cart).map(([id,qty])=>{
+    const p=products.find(x=>x.id===id); if(!p) return '';
+    return `
+      <div class="cart-row">
+        <div style="display:flex;align-items:center;gap:12px">
+          <img src="${p.img}" alt="${p.name}">
+          <div>
+            <div><b>${p.name}</b></div>
+            <div style="color:#cbd5e1">${qty} × ${money(p.price)} = <b>${money(p.price*qty)}</b></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="x" data-dec="${id}">−</button>
+          <span>${qty}</span>
+          <button class="x" data-inc="${id}">+</button>
+          <button class="x" data-rem="${id}">Remove</button>
+        </div>
+      </div>`;
+  }).join('') || `<div style="padding:16px;color:#cbd5e1">Your cart is empty.</div>`;
+  list.innerHTML = rows;
 
-      let total=0; for(const [id,qty] of Object.entries(cart)){ const p=products.find(x=>x.id===id); if(p) total+=p.price*qty; }
-      document.getElementById('cartTotal').textContent = money(total);
+  let total=0; for(const [id,qty] of Object.entries(cart)){ const p=products.find(x=>x.id===id); if(p) total+=p.price*qty; }
+  document.getElementById('cartTotal').textContent = money(total);
 
-      list.querySelectorAll('[data-inc]').forEach(b=> b.onclick=()=>{ cart[b.dataset.inc]++; updateCartUI(); renderCartDialog(); });
-      list.querySelectorAll('[data-dec]').forEach(b=> b.onclick=()=>{ cart[b.dataset.dec]=Math.max(1, cart[b.dataset.dec]-1); updateCartUI(); renderCartDialog(); });
-      list.querySelectorAll('[data-rem]').forEach(b=> b.onclick=()=>{ delete cart[b.dataset.rem]; updateCartUI(); renderCartDialog(); });
-    }
+  list.querySelectorAll('[data-inc]').forEach(b=> b.onclick=()=>{ cart[b.dataset.inc]++; updateCartUI(); renderCartDialog(); });
+  list.querySelectorAll('[data-dec]').forEach(b=> b.onclick=()=>{ cart[b.dataset.dec]=Math.max(1, cart[b.dataset.dec]-1); updateCartUI(); renderCartDialog(); });
+  list.querySelectorAll('[data-rem]').forEach(b=> b.onclick=()=>{ delete cart[b.dataset.rem]; updateCartUI(); renderCartDialog(); });
+}
 
-    function checkout(){
-      const text = cartSummaryText();
-      const url = `https://wa.me/2348149427453?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${text}`;
-      window.open(url,'_blank');
-    }
-    document.getElementById('checkoutBtn').addEventListener('click', checkout);
-    document.getElementById('waQuick').addEventListener('click', (e)=>{ e.currentTarget.href = `https://wa.me/2348149427453?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${cartSummaryText()}`; });
+function checkout(){
+  const text = cartSummaryText();
+  const url = `https://wa.me/2348149427453?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${text}`;
+  window.open(url,'_blank');
+}
+document.getElementById('checkoutBtn').addEventListener('click', checkout);
+document.getElementById('waQuick').addEventListener('click', (e)=>{ e.currentTarget.href = `https://wa.me/2348149427453?text=Hello%20FreshChoice!%20I'd%20like%20to%20order:%0A${cartSummaryText()}`; });
 
-    /***************
-     * UI helpers
-     ***************/
-    function toast(msg){
-      const t=document.createElement('div');
-      t.textContent=msg; t.style.position='fixed'; t.style.right='16px'; t.style.bottom='16px';
-      t.style.padding='10px 14px'; t.style.borderRadius='12px';
-      t.style.background='rgba(16,185,129,.97)'; t.style.color='#062b26'; t.style.fontWeight='800';
-      t.style.boxShadow='var(--shadow)'; t.style.zIndex='999'; document.body.appendChild(t);
-      setTimeout(()=>t.remove(), 1400);
-    }
+/***************
+ * UI helpers
+ ***************/
+function toast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg; t.style.position='fixed'; t.style.right='16px'; t.style.bottom='16px';
+  t.style.padding='10px 14px'; t.style.borderRadius='12px';
+  t.style.background='rgba(16,185,129,.97)'; t.style.color='#062b26'; t.style.fontWeight='800';
+  t.style.boxShadow='var(--shadow)'; t.style.zIndex='999'; document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 1400);
+}
 
-    // init
-    updateCartUI();
+// init
+updateCartUI();
 
-    // Chat helpers bound late (kept here for readability)
-    function appendMessage(text){ appendBubble(text,'user'); handleMessage(text); }
-  </script>
+// Chat helpers bound late (kept here for readability)
+function appendMessage(text){ appendBubble(text,'user'); handleMessage(text); }
+</script>
 </body>
 </html>
